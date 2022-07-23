@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Business.Validators;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using System;
@@ -12,13 +13,26 @@ namespace Business.Concrete
     public class CarManager : ICarService
     {
         ICarDal _carDal;
+        CarValidator carValidator = new CarValidator();
         public CarManager(ICarDal carDal)
         {
             _carDal = carDal;
         }
         public void Add(Car item)
         {
-            _carDal.Add(item);
+            var result = carValidator.Validate(item);
+            if (result.IsValid)
+            {
+                _carDal.Add(item);
+            }
+            else
+            {
+                foreach(var error in result.Errors)
+                {
+                    throw new Exception(error.ErrorMessage);
+                }
+            }
+            
         }
 
         public void Delete(Car item)
@@ -33,12 +47,31 @@ namespace Business.Concrete
 
         public Car GetById(int id)
         {
-            return _carDal.GetById(id);
+            return _carDal.Get(c => c.Id == id);
+        }
+        public List<Car> GetCarsByBrandId(int id)
+        {
+            return _carDal.GetAll(c => c.BrandId == id);
+        }
+        public List<Car> GetCarsByColorId(int id)
+        {
+            return _carDal.GetAll(c => c.BrandId == id);
         }
 
         public void Update(Car item)
         {
-            _carDal.Update(item);
+            var result = carValidator.Validate(item);
+            if (result.IsValid)
+            {
+                _carDal.Update(item);
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    throw new Exception(error.ErrorMessage);
+                }
+            }
         }
     }
 }
